@@ -20,7 +20,7 @@ void handleClient(SOCKET clientSocket)
         return;
     }
 
-    string request(tempBuffer, bytesReceived); 
+    string request(tempBuffer, bytesReceived);
 
     // aquí se obtine el metodo y el endpoint
     istringstream requestStream(request);
@@ -38,7 +38,7 @@ void handleClient(SOCKET clientSocket)
         if (path == "/")
         {
             cout << "Resource selected: /\r\n"
-                      << endl;
+                 << endl;
             statusLine = "HTTP/1.1 200 OK";
             body = "<h1>Welcome to the server!</h1>";
         }
@@ -167,7 +167,7 @@ void handleClient(SOCKET clientSocket)
     closesocket(clientSocket);
     cout << "--------------------------------" << endl;
     cout << "Waiting for a client to connect...\r\n"
-              << endl;
+         << endl;
 }
 
 // función main
@@ -206,7 +206,7 @@ int main()
         return 1;
     }
 
-    // el servidor empieza a escuchar 
+    // el servidor empieza a escuchar
     if (listen(serverSocket, SOMAXCONN) == SOCKET_ERROR)
     {
         cout << "Listen failed. Error: " << WSAGetLastError() << endl;
@@ -220,7 +220,7 @@ int main()
     // loop para mantener el servidor en escucha a peticiones del clientes
     while (true)
     {
-        // se obtiene el socket del cliente 
+        // se obtiene el socket del cliente
         sockaddr_in clientAddr;
         int clientSize = sizeof(clientAddr);
         SOCKET clientSocket = accept(serverSocket, (sockaddr *)&clientAddr, &clientSize);
@@ -235,7 +235,6 @@ int main()
         thread clientThread(handleClient, clientSocket);
         clientThread.detach();
     }
-
 
     closesocket(serverSocket); // cerrar el socket del servidor
     WSACleanup();
