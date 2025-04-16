@@ -110,6 +110,10 @@ void handleClient(SOCKET clientSocket)
         {
             filePath = "templates/case4.html";
         }
+        else
+        {
+
+        }
 
         string mimeType = getMimeType(filePath);
         ifstream file(filePath, ios::in | ios::binary);
@@ -163,11 +167,11 @@ void handleClient(SOCKET clientSocket)
         }
         else
         {
-            string errorResponse = "HTTP/1.1 404 Not Found\r\n"
+            string errorResponse = "HTTP/1.1 404 Page Not Found\r\n"
                                    "Content-Type: text/html\r\n"
-                                   "Content-Length: 22\r\n"
+                                   "Content-Length: 27\r\n"
                                    "Connection: close\r\n\r\n"
-                                   "<h1>404 Not Found</h1>";
+                                   "<h1>404 Page Not Found</h1>";
             send(clientSocket, errorResponse.c_str(), errorResponse.size(), 0);
             logRequest(clientIP, method, path, "404");
         }
