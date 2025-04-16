@@ -11,6 +11,7 @@
         "ranges": "cpp",
         "utility": "cpp",
         "iosfwd": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "fstream": "cpp"
     }
 }

@@ -3,14 +3,73 @@
 #include <fstream>
 #include <thread>
 #include <sstream>
+#include <chrono>
+#include <iomanip>
 
 #pragma comment(lib, "Ws2_32.lib") // API Windows Sockets
 
 using namespace std;
 
+// Funcín para detectar el tipo MIME
+string getMimeType(const string &path)
+{
+    auto endsWith = [](const string &value, const string &ending)
+    {
+        if (ending.size() > value.size())
+            return false;
+        return equal(ending.rbegin(), ending.rend(), value.rbegin());
+    };
+
+    if (endsWith(path, ".html"))
+        return "text/html";
+    if (endsWith(path, ".css"))
+        return "text/css";
+    if (endsWith(path, ".js"))
+        return "application/javascript";
+    if (endsWith(path, ".jpg") || endsWith(path, ".jpeg"))
+        return "image/jpeg";
+    if (endsWith(path, ".png"))
+        return "image/png";
+    if (endsWith(path, ".gif"))
+        return "image/gif";
+    if (endsWith(path, ".mp4"))
+        return "video/mp4";
+    return "application/octet-stream";
+}
+
+// Logger de peticiones
+void logRequest(const string &clientIP, const string &method, const string &path, const string &statusCode)
+{
+    cout << "[LOG] Ejecutando logRequest()...\n"; // Verificación en consola
+
+    ofstream logFile("server.log", ios::app);
+    if (!logFile.is_open())
+    {
+        cerr << "Error al abrir server.log para escribir.\n";
+        return;
+    }
+
+    auto now = chrono::system_clock::to_time_t(chrono::system_clock::now());
+    tm localTime;
+    localtime_s(&localTime, &now);
+
+    logFile << put_time(&localTime, "%Y-%m-%d %H:%M:%S") << " | "
+            << clientIP << " | "
+            << method << " | "
+            << path << " | "
+            << statusCode << "\n";
+
+    logFile.close();
+}
+
 // función para manejar cada petición de manera independiente
 void handleClient(SOCKET clientSocket)
 {
+    sockaddr_in clientAddr;
+    int addrSize = sizeof(clientAddr);
+    getpeername(clientSocket, (sockaddr *)&clientAddr, &addrSize);
+    string clientIP = inet_ntoa(clientAddr.sin_addr);
+
     // se lee directamente desdel el socket
     char tempBuffer[4096];
     int bytesReceived = recv(clientSocket, tempBuffer, sizeof(tempBuffer), 0);
@@ -30,57 +89,88 @@ void handleClient(SOCKET clientSocket)
     // Si el método es GET o HEAD
     if (method == "GET" || method == "HEAD")
     {
-        string body = "";
-        string statusLine;
-        int contentLength;
-        string response;
-
+        string filePath = "templates" + path;
         if (path == "/")
         {
-            cout << "Resource selected: /\r\n"
-                 << endl;
-            statusLine = "HTTP/1.1 200 OK";
-            body = "<h1>Welcome to the server!</h1>";
+            filePath = "templates/index.html";
         }
-        else if (path == "/index")
+        else if (path == "/case1")
         {
-            cout << "Resource selected: /index" << endl;
-            ifstream file("templates/index.html", ios::in | ios::binary);
-            if (file)
+            filePath = "templates/case1.html";
+        }
+        else if (path == "/case2")
+        {
+            filePath = "templates/case2.html";
+        }
+        else if (path == "/case3")
+        {
+            filePath = "templates/case3.html";
+        }
+        else if (path == "/case4")
+        {
+            filePath = "templates/case4.html";
+        }
+
+        string mimeType = getMimeType(filePath);
+        ifstream file(filePath, ios::in | ios::binary);
+
+        if (file)
+        {
+            if (mimeType == "text/html")
             {
                 ostringstream ss;
                 ss << file.rdbuf();
-                body = ss.str();
-                statusLine = "HTTP/1.1 200 OK";
+                string body = ss.str();
+
+                string response = "HTTP/1.1 200 OK\r\n";
+                response += "Content-Type: text/html\r\n";
+                response += "Content-Length: " + to_string(body.size()) + "\r\n";
+                response += "Connection: close\r\n\r\n";
+                if (method != "HEAD")
+                    response += body;
+
+                send(clientSocket, response.c_str(), response.size(), 0);
             }
             else
             {
-                statusLine = "HTTP/1.1 404 Not Found";
-                body = "<h1>Unable to load the file index.html</h1>";
+                file.seekg(0, ios::end);
+                int contentLength = file.tellg();
+                file.seekg(0, ios::beg);
+
+                ostringstream headers;
+                headers << "HTTP/1.1 200 OK\r\n";
+                headers << "Content-Type: " << mimeType << "\r\n";
+                headers << "Content-Length: " << contentLength << "\r\n";
+                headers << "Connection: close\r\n\r\n";
+                string headerStr = headers.str();
+                send(clientSocket, headerStr.c_str(), headerStr.size(), 0);
+
+                if (method != "HEAD")
+                {
+                    char buffer[4096];
+                    while (!file.eof())
+                    {
+                        file.read(buffer, sizeof(buffer));
+                        streamsize bytesRead = file.gcount();
+                        if (bytesRead > 0)
+                        {
+                            send(clientSocket, buffer, bytesRead, 0);
+                        }
+                    }
+                }
             }
+            logRequest(clientIP, method, path, "200");
         }
         else
         {
-            cout << "Resource not found: " << path << endl;
-            statusLine = "HTTP/1.1 404 Not Found";
-            body = "<h1>404 Not Found</h1>";
+            string errorResponse = "HTTP/1.1 404 Not Found\r\n"
+                                   "Content-Type: text/html\r\n"
+                                   "Content-Length: 22\r\n"
+                                   "Connection: close\r\n\r\n"
+                                   "<h1>404 Not Found</h1>";
+            send(clientSocket, errorResponse.c_str(), errorResponse.size(), 0);
+            logRequest(clientIP, method, path, "404");
         }
-
-        if (method == "HEAD")
-        {
-            body = "";
-        }
-
-        contentLength = body.size();
-
-        // se construye la respuesta que se va a enviar al cliente
-        response += statusLine;
-        response += "\r\nContent-Type: text/html";
-        response += "\r\nContent-Length: " + to_string(contentLength);
-        response += "\r\nConnection: close\r\n\r\n";
-        response += body;
-
-        send(clientSocket, response.c_str(), response.size(), 0);
     }
     // si el método es POST
     else if (method == "POST")
