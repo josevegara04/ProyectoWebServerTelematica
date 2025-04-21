@@ -11,7 +11,7 @@ En este proyecto, desarrollamos un servidor web, en c++, capaz de procesar petic
 1) **Crea una carpeta en donde puedas guardar el proyecto**
    
 2) **Clonar el repositorio**
-   Abre GitBash y navega hasta la carpeta que creaste y escribe el siguiente comando:
+Abre GitBash y navega hasta la carpeta que creaste y escribe el siguiente comando:
    ```
    git clone https://github.com/josevegara04/ProyectoWebServerTelematica.git
    ```
