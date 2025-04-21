@@ -1,17 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Caso 4</title>
 </head>
+
 <body>
     <header>
         <h1>Caso 4: archivo de 1mb</h1>
     </header>
-    <main>
-        <a href="https://www.eafit.edu.co">Visitar la página principal de EAFIT</a>
-        <img src="/images/logo.jpg" alt="Logo" width="300">
-    </main>
+    <h2>Contenido del archivo</h2>
+    <pre id="contenido" style="white-space: pre-wrap;"></pre>
+
+    <script>
+        function cargarTexto(archivo, elementoId) {
+            fetch(archivo)
+                .then(res => res.text())
+                .then(texto => {
+                    document.getElementById(elementoId).textContent = texto;
+                })
+                .catch(err => {
+                    console.error('Error al cargar el archivo:', err);
+                });
+        }
+
+        // Usamos la función
+        cargarTexto('texto_1mb.txt', 'contenido');
+    </script>
 </body>
+
 </html>
