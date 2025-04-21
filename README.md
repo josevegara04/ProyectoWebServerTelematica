@@ -10,6 +10,7 @@ Este proyecto tiene como objetivo desarrollar un servidor web básico utilizando
 ## Desarrollo / Implementación
 
 La lógica principal del proyecto fue desarrollada en `server.cpp`. El servidor escucha peticiones en el puerto 8080 y responde dependiendo del método HTTP y del recurso solicitado. La estructura de carpetas incluye:
+ ```
 ProyectoWebServerTelematica/
 ├── server.log
 ├── server.cpp
@@ -23,6 +24,7 @@ ProyectoWebServerTelematica/
 │   └── style.css
 │   ├── archivo.mp4
 │   ├── index.html
+   ```
 
 El servidor fue implementado usando Winsock2 para manejo de conexiones TCP en Windows.
 Se incluye funcionalidad para:
