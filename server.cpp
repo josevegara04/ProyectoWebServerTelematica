@@ -130,7 +130,7 @@ void handleClient(SOCKET clientSocket) {
 
 int main(int argc, char *argv[]) {
     if (argc != 4) {
-        cout << "Uso: ./server <PUERTO> <ARCHIVO_LOG> <CARPETA_RAIZ>\n";
+        cout << "Uso: ./server <PUERTO> <Log File> <DocumentRootFolder>\n";
         return 1;
     }
 
