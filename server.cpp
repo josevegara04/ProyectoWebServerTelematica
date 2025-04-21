@@ -6,46 +6,32 @@
 #include <chrono>
 #include <iomanip>
 
-#pragma comment(lib, "Ws2_32.lib") // API Windows Sockets
+#pragma comment(lib, "Ws2_32.lib")
 
 using namespace std;
 
-// Funcín para detectar el tipo MIME
-string getMimeType(const string &path)
-{
-    auto endsWith = [](const string &value, const string &ending)
-    {
-        if (ending.size() > value.size())
-            return false;
+string logFilePath;
+string rootDirectory;
+
+string getMimeType(const string &path) {
+    auto endsWith = [](const string &value, const string &ending) {
+        if (ending.size() > value.size()) return false;
         return equal(ending.rbegin(), ending.rend(), value.rbegin());
     };
-
-    if (endsWith(path, ".html"))
-        return "text/html";
-    if (endsWith(path, ".css"))
-        return "text/css";
-    if (endsWith(path, ".js"))
-        return "application/javascript";
-    if (endsWith(path, ".jpg") || endsWith(path, ".jpeg"))
-        return "image/jpeg";
-    if (endsWith(path, ".png"))
-        return "image/png";
-    if (endsWith(path, ".gif"))
-        return "image/gif";
-    if (endsWith(path, ".mp4"))
-        return "video/mp4";
+    if (endsWith(path, ".html")) return "text/html";
+    if (endsWith(path, ".css")) return "text/css";
+    if (endsWith(path, ".js")) return "application/javascript";
+    if (endsWith(path, ".jpg") || endsWith(path, ".jpeg")) return "image/jpeg";
+    if (endsWith(path, ".png")) return "image/png";
+    if (endsWith(path, ".gif")) return "image/gif";
+    if (endsWith(path, ".mp4")) return "video/mp4";
     return "application/octet-stream";
 }
 
-// Logger de peticiones
-void logRequest(const string &clientIP, const string &method, const string &path, const string &statusCode)
-{
-    cout << "[LOG] Ejecutando logRequest()...\n"; // Verificación en consola
-
-    ofstream logFile("server.log", ios::app);
-    if (!logFile.is_open())
-    {
-        cerr << "Error al abrir server.log para escribir.\n";
+void logRequest(const string &clientIP, const string &method, const string &path, const string &statusCode) {
+    ofstream logFile(logFilePath, ios::app);
+    if (!logFile.is_open()) {
+        cerr << "Error al abrir el archivo de log.\n";
         return;
     }
 
@@ -54,17 +40,12 @@ void logRequest(const string &clientIP, const string &method, const string &path
     localtime_s(&localTime, &now);
 
     logFile << put_time(&localTime, "%Y-%m-%d %H:%M:%S") << " | "
-            << clientIP << " | "
-            << method << " | "
-            << path << " | "
+            << clientIP << " | " << method << " | " << path << " | "
             << statusCode << "\n";
-
     logFile.close();
 }
 
-// función para manejar cada petición de manera independiente
-void handleClient(SOCKET clientSocket)
-{
+void handleClient(SOCKET clientSocket) {
     sockaddr_in clientAddr;
     int addrSize = sizeof(clientAddr);
     getpeername(clientSocket, (sockaddr *)&clientAddr, &addrSize);
@@ -86,34 +67,13 @@ void handleClient(SOCKET clientSocket)
     string method, path;
     requestStream >> method >> path;
 
-    // Si el método es GET o HEAD
-    if (method == "GET" || method == "HEAD")
-    {
-        string filePath = "templates" + path;
-        if (path == "/")
-        {
-            filePath = "templates/index.html";
-        }
-        else if (path == "/case1")
-        {
-            filePath = "templates/case1.html";
-        }
-        else if (path == "/case2")
-        {
-            filePath = "templates/case2.html";
-        }
-        else if (path == "/case3")
-        {
-            filePath = "templates/case3.html";
-        }
-        else if (path == "/case4")
-        {
-            filePath = "templates/case4.html";
-        }
-        else
-        {
-
-        }
+    if (method == "GET" || method == "HEAD") {
+        string filePath = rootDirectory + path;
+        if (path == "/") filePath = rootDirectory + "/index.html";
+        else if (path == "/case1") filePath = rootDirectory + "/case1.html";
+        else if (path == "/case2") filePath = rootDirectory + "/case2.html";
+        else if (path == "/case3") filePath = rootDirectory + "/case3.html";
+        else if (path == "/case4") filePath = rootDirectory + "/case4.html";
 
         string mimeType = getMimeType(filePath);
         ifstream file(filePath, ios::in | ios::binary);
@@ -142,31 +102,25 @@ void handleClient(SOCKET clientSocket)
                 file.seekg(0, ios::beg);
 
                 ostringstream headers;
-                headers << "HTTP/1.1 200 OK\r\n";
-                headers << "Content-Type: " << mimeType << "\r\n";
-                headers << "Content-Length: " << contentLength << "\r\n";
-                headers << "Connection: close\r\n\r\n";
+                headers << "HTTP/1.1 200 OK\r\n"
+                        << "Content-Type: " << mimeType << "\r\n"
+                        << "Content-Length: " << contentLength << "\r\n"
+                        << "Connection: close\r\n\r\n";
                 string headerStr = headers.str();
                 send(clientSocket, headerStr.c_str(), headerStr.size(), 0);
 
-                if (method != "HEAD")
-                {
+                if (method != "HEAD") {
                     char buffer[4096];
-                    while (!file.eof())
-                    {
+                    while (!file.eof()) {
                         file.read(buffer, sizeof(buffer));
                         streamsize bytesRead = file.gcount();
                         if (bytesRead > 0)
-                        {
                             send(clientSocket, buffer, bytesRead, 0);
-                        }
                     }
                 }
             }
             logRequest(clientIP, method, path, "200");
-        }
-        else
-        {
+        } else {
             string errorResponse = "HTTP/1.1 404 Page Not Found\r\n"
                                    "Content-Type: text/html\r\n"
                                    "Content-Length: 27\r\n"
@@ -257,44 +211,40 @@ void handleClient(SOCKET clientSocket)
         send(clientSocket, errorResponse, strlen(errorResponse), 0);
     }
 
-    // se cierra el socket del cliente
     closesocket(clientSocket);
-    cout << "--------------------------------" << endl;
-    cout << "Waiting for a client to connect...\r\n"
-         << endl;
 }
 
-// función main
-int main()
-{
-    WSADATA wsaData;
-    int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    if (result != 0)
-    {
-        cout << "WSAStartup failed with error: " << result << endl;
+int main(int argc, char *argv[]) {
+    if (argc != 4) {
+        cout << "Uso: ./server <PUERTO> <Log File> <DocumentRootFolder>\n";
         return 1;
     }
 
-    // se crea el socket del servidor
+    int port = stoi(argv[1]);
+    logFilePath = argv[2];
+    rootDirectory = argv[3];
+
+    WSADATA wsaData;
+    int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (result != 0) {
+        cout << "WSAStartup falló con error: " << result << endl;
+        return 1;
+    }
+
     SOCKET serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (serverSocket == INVALID_SOCKET)
-    {
-        cout << "Socket creation failed. Error: " << WSAGetLastError() << endl;
+    if (serverSocket == INVALID_SOCKET) {
+        cout << "Error al crear socket: " << WSAGetLastError() << endl;
         WSACleanup();
         return 1;
     }
-    cout << "\r\nSocket created successfully!" << endl;
 
-    // se crea la estructura del socket
     sockaddr_in serverAddr;
-    serverAddr.sin_family = AF_INET;         // se define que trabaja con IPv4
-    serverAddr.sin_addr.s_addr = INADDR_ANY; // permite que se utilice cualquier IP desde donde se esté ejecutando el servidor
-    serverAddr.sin_port = htons(8080);       // define que se va a escuchar en el puerto 8080
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_addr.s_addr = INADDR_ANY;
+    serverAddr.sin_port = htons(port);
 
-    // se construye el socket con la estructura anterior
-    if (bind(serverSocket, (sockaddr *)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
-    {
-        cout << "Bind failed. Error: " << WSAGetLastError() << endl;
+    if (bind(serverSocket, (sockaddr *)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+        cout << "Bind falló. Error: " << WSAGetLastError() << endl;
         closesocket(serverSocket);
         WSACleanup();
         return 1;
