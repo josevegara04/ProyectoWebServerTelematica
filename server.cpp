@@ -13,24 +13,38 @@ using namespace std;
 string logFilePath;
 string rootDirectory;
 
-string getMimeType(const string &path) {
-    auto endsWith = [](const string &value, const string &ending) {
-        if (ending.size() > value.size()) return false;
+// Función para determinar que tipo de archivo es el recurso que se solicita
+string getMimeType(const string &path)
+{
+    auto endsWith = [](const string &value, const string &ending)
+    {
+        if (ending.size() > value.size())
+            return false;
         return equal(ending.rbegin(), ending.rend(), value.rbegin());
     };
-    if (endsWith(path, ".html")) return "text/html";
-    if (endsWith(path, ".css")) return "text/css";
-    if (endsWith(path, ".js")) return "application/javascript";
-    if (endsWith(path, ".jpg") || endsWith(path, ".jpeg")) return "image/jpeg";
-    if (endsWith(path, ".png")) return "image/png";
-    if (endsWith(path, ".gif")) return "image/gif";
-    if (endsWith(path, ".mp4")) return "video/mp4";
+    if (endsWith(path, ".html"))
+        return "text/html";
+    if (endsWith(path, ".css"))
+        return "text/css";
+    if (endsWith(path, ".js"))
+        return "application/javascript";
+    if (endsWith(path, ".jpg") || endsWith(path, ".jpeg"))
+        return "image/jpeg";
+    if (endsWith(path, ".png"))
+        return "image/png";
+    if (endsWith(path, ".gif"))
+        return "image/gif";
+    if (endsWith(path, ".mp4"))
+        return "video/mp4";
     return "application/octet-stream";
 }
 
-void logRequest(const string &clientIP, const string &method, const string &path, const string &statusCode) {
+// Función para tener registro de las peticiones realizadas al servidor
+void logRequest(const string &clientIP, const string &method, const string &path, const string &statusCode)
+{
     ofstream logFile(logFilePath, ios::app);
-    if (!logFile.is_open()) {
+    if (!logFile.is_open())
+    {
         cerr << "Error al abrir el archivo de log.\n";
         return;
     }
@@ -45,7 +59,9 @@ void logRequest(const string &clientIP, const string &method, const string &path
     logFile.close();
 }
 
-void handleClient(SOCKET clientSocket) {
+// Función para manejar una petición
+void handleClient(SOCKET clientSocket)
+{
     sockaddr_in clientAddr;
     int addrSize = sizeof(clientAddr);
     getpeername(clientSocket, (sockaddr *)&clientAddr, &addrSize);
@@ -67,13 +83,19 @@ void handleClient(SOCKET clientSocket) {
     string method, path;
     requestStream >> method >> path;
 
-    if (method == "GET" || method == "HEAD") {
+    if (method == "GET" || method == "HEAD")
+    {
         string filePath = rootDirectory + path;
-        if (path == "/") filePath = rootDirectory + "/index.html";
-        else if (path == "/case1") filePath = rootDirectory + "/case1.html";
-        else if (path == "/case2") filePath = rootDirectory + "/case2.html";
-        else if (path == "/case3") filePath = rootDirectory + "/case3.html";
-        else if (path == "/case4") filePath = rootDirectory + "/case4.html";
+        if (path == "/")
+            filePath = rootDirectory + "/index.html";
+        else if (path == "/case1")
+            filePath = rootDirectory + "/case1.html";
+        else if (path == "/case2")
+            filePath = rootDirectory + "/case2.html";
+        else if (path == "/case3")
+            filePath = rootDirectory + "/case3.html";
+        else if (path == "/case4")
+            filePath = rootDirectory + "/case4.html";
 
         string mimeType = getMimeType(filePath);
         ifstream file(filePath, ios::in | ios::binary);
@@ -109,9 +131,11 @@ void handleClient(SOCKET clientSocket) {
                 string headerStr = headers.str();
                 send(clientSocket, headerStr.c_str(), headerStr.size(), 0);
 
-                if (method != "HEAD") {
+                if (method != "HEAD")
+                {
                     char buffer[4096];
-                    while (!file.eof()) {
+                    while (!file.eof())
+                    {
                         file.read(buffer, sizeof(buffer));
                         streamsize bytesRead = file.gcount();
                         if (bytesRead > 0)
@@ -120,7 +144,9 @@ void handleClient(SOCKET clientSocket) {
                 }
             }
             logRequest(clientIP, method, path, "200");
-        } else {
+        }
+        else
+        {
             string errorResponse = "HTTP/1.1 404 Page Not Found\r\n"
                                    "Content-Type: text/html\r\n"
                                    "Content-Length: 27\r\n"
@@ -214,8 +240,10 @@ void handleClient(SOCKET clientSocket) {
     closesocket(clientSocket);
 }
 
-int main(int argc, char *argv[]) {
-    if (argc != 4) {
+int main(int argc, char *argv[])
+{
+    if (argc != 4)
+    {
         cout << "Uso: ./server <PUERTO> <Log File> <DocumentRootFolder>\n";
         return 1;
     }
@@ -226,24 +254,30 @@ int main(int argc, char *argv[]) {
 
     WSADATA wsaData;
     int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    if (result != 0) {
+    if (result != 0)
+    {
         cout << "WSAStartup falló con error: " << result << endl;
         return 1;
     }
 
+    // Se crea el socket del servidor
     SOCKET serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (serverSocket == INVALID_SOCKET) {
+    if (serverSocket == INVALID_SOCKET)
+    {
         cout << "Error al crear socket: " << WSAGetLastError() << endl;
         WSACleanup();
         return 1;
     }
 
+    // Se crea la estructura del socket
     sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = INADDR_ANY;
     serverAddr.sin_port = htons(port);
 
-    if (bind(serverSocket, (sockaddr *)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+    // Se enlaza la estructura con el socket
+    if (bind(serverSocket, (sockaddr *)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
+    {
         cout << "Bind falló. Error: " << WSAGetLastError() << endl;
         closesocket(serverSocket);
         WSACleanup();
