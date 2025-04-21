@@ -2,7 +2,7 @@
 ### Integrantes: 
 - Juan Esteban Barrios Tovar
 - Alejandro García Cortés
-- José Benjamín Vega Rámirez
+- José Benjamín Vega Ramírez
 
 ## Descripción
 Este proyecto tiene como objetivo desarrollar un servidor web básico utilizando el lenguaje de programación **C++**, capaz de manejar solicitudes HTTP como **GET**, **HEAD** y **POST**. El servidor puede enviar archivos estáticos como páginas HTML, imágenes y videos. Se buscó simular el comportamiento básico de un servidor como Apache, pero a un nivel de bajo nivel usando sockets TCP.
@@ -68,8 +68,9 @@ Después de seguir estos pasos, el servidor estará funcionando, mostrando este 
    Servidor escuchando en el puerto 8080...
 ```
 
-Para probar el servidor, puedes ingrear a localhost:8080.
-Para probar los 4 casos de pruba, prueba con los sigueientes endpoints:
+Para probar el servidor, puedes ingresar en tu navegador a localhost:8080.
+
+Para ver los 4 casos de prueba, ingresa con los siguientes endpoints:
 - /case1
 - /case2
 - /case3
