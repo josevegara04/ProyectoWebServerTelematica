@@ -18,6 +18,7 @@ En este proyecto, desarrollamos un servidor web, en c++, capaz de procesar petic
    ```
 
 3) **Ejecuta el servidor**
+   
    En la terminal, navega hasta la carpeta del proyecto. Después, ejecuta el siguiente comando:
    > en Windows
    ```
@@ -27,3 +28,16 @@ En este proyecto, desarrollamos un servidor web, en c++, capaz de procesar petic
    ```
    ./server 8080 server.log templates
    ```
+
+Después de seguir estos pasos, el servidor estará funcionando, mostrando este mensaje: 
+
+```
+   Servidor escuchando en el puerto 8080...
+```
+
+Para probar el servidor, puedes ingrear a localhost:8080.
+Para probar los 4 casos de pruba, prueba con los sigueientes endpoints:
+- /case1
+- /case2
+- /case3
+- /case4
