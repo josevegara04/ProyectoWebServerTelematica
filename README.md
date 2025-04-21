@@ -91,6 +91,7 @@ Para probar los 4 casos de pruba, prueba con los sigueientes endpoints:
    ![image](https://github.com/user-attachments/assets/80563930-61f8-439c-b45e-5549ee6efc7e)
 
 6) **Server.log**
+   
 ![image](https://github.com/user-attachments/assets/0951eb31-94ce-4b98-9a03-fc1228ce6175)
 
 
